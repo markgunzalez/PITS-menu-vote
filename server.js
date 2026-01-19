@@ -20,19 +20,29 @@ app.use(express.static(path.join(__dirname)));
 
 // --- Database adapters ---
 
-// 1. SQLite Adapter (Local)
+// 1. SQLite Adapter (Local/Fallback)
 let db;
 if (!USE_KV) {
-    const dataDir = path.dirname(DB_PATH);
-    if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir);
+    // If running on Vercel but no KV link, use In-Memory to avoid crash
+    // Otherwise use file-based SQLite
+    const isVercel = !!process.env.VERCEL;
     
-    db = new sqlite3.Database(DB_PATH, (err) => {
-        if (err) console.error('SQLite Error:', err.message);
-        else {
-            console.log('Connected to Local SQLite.');
-            db.run(`CREATE TABLE IF NOT EXISTS menu_votes (id INTEGER PRIMARY KEY, count INTEGER DEFAULT 0)`);
-        }
-    });
+    if (isVercel) {
+        console.warn("⚠️ VERCEL DETECTED BUT NO KV CONFIG. Falling back to IN-MEMORY database (Data will be lost on restart).");
+        db = new sqlite3.Database(':memory:');
+        db.run(`CREATE TABLE IF NOT EXISTS menu_votes (id INTEGER PRIMARY KEY, count INTEGER DEFAULT 0)`);
+    } else {
+        const dataDir = path.dirname(DB_PATH);
+        if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir);
+        
+        db = new sqlite3.Database(DB_PATH, (err) => {
+            if (err) console.error('SQLite Error:', err.message);
+            else {
+                console.log('Connected to Local SQLite.');
+                db.run(`CREATE TABLE IF NOT EXISTS menu_votes (id INTEGER PRIMARY KEY, count INTEGER DEFAULT 0)`);
+            }
+        });
+    }
 }
 
 // Data Helpers
