@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Top 8 Menu Vote</title>
+    <title>PITS Annual Party 2026</title>
     <meta name="description" content="Vote for your top 8 favorite menus.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -22,9 +22,9 @@
         <main class="main-content">
             <section class="menu-grid-section">
                 <div class="section-header">
-                    <h2>Menu Collection</h2>
-                    <h6>**เมนูแนะนำ</h6>
-                    <span id="selection-count" class="badge">0 / 8 Selected</span>
+                    <h2>รายการเมนู</h2>
+                    <h4>**เมนูแนะนำ</h4>
+                    <span id="selection-count" class="badge">0 / 8 เมนู</span>
                 </div>
                 <div id="menu-grid" class="menu-grid">
                     <!-- Menu items will be injected here via JS -->
@@ -33,7 +33,7 @@
 
             <aside id="sidebar" class="top-picks-sidebar glass-panel">
                 <button class="close-sidebar-btn" onclick="toggleSidebar()">×</button>
-                <h2>Your Top 8</h2>
+                <h2>เมนูที่คุณเลือก</h2>
                 <div id="top-picks-list" class="top-picks-list">
                     <p class="empty-state">No items selected yet.</p>
                 </div>
@@ -48,11 +48,11 @@
         
         <!-- Mobile Sticky Footer for Top Picks Preview -->
         <div class="mobile-picks-indicator glass-panel">
-            <span>Your Picks</span>
+            <span>เมนูที่คุณเลือก</span>
             <span id="mobile-count" class="badge">0/8</span>
             <div class="mobile-actions">
-                <button id="view-picks-btn" class="icon-btn">View</button>
-                <button id="mobile-submit-btn" class="icon-btn highlight hidden" onclick="submitVote()">Submit</button>
+                <button id="view-picks-btn" class="icon-btn">ดูเมนูที่เลือก</button>
+                <button id="mobile-submit-btn" class="icon-btn highlight hidden" onclick="submitVote()">ส่งผลลัพธ์</button>
             </div>
         </div>
 
@@ -60,7 +60,7 @@
         <div id="results-modal" class="modal hidden">
             <div class="modal-content glass-panel">
                 <div class="modal-header">
-                    <h2>Global Voting Results</h2>
+                    <h2>ผลลัพธ์การโหวต</h2>
                     <button class="close-btn" onclick="closeResults()">×</button>
                 </div>
                 <div id="results-list" class="results-list">
