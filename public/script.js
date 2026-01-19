@@ -300,7 +300,7 @@ async function showResults(resultsData) {
     }
 
     sortedMenus.forEach((item, index) => {
-        if (item.votes === 0 && index > 9) return; // Hide zero votes if low rank
+        // Show all items, do not filter zero votes
 
         const div = document.createElement('div');
         div.className = 'result-item';
