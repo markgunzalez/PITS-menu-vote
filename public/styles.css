@@ -37,29 +37,39 @@ body {
 .app-container {
     max-width: 1400px;
     margin: 0 auto;
-    padding: 0.5rem var(--spacing-md) var(--spacing-md) var(--spacing-md); /* Reduced top padding */
+    padding: 0.5rem; 
     display: flex;
     flex-direction: column;
-    height: 100vh;
+    min-height: 100vh; /* Allow grow */
+    height: auto;
 }
 
 /* Header */
+/* Header */
 .glass-header {
     text-align: center;
-    padding: 0.5rem 0 1rem 0; /* Reduced top padding significantly */
-    margin-bottom: 0.5rem;
+    padding: var(--spacing-md) 0 var(--spacing-md) 0;
+    /* margin-bottom: var(--spacing-lg); */
     position: relative;
+    /* Removed glass box styles as requested */
+}
+
+.section-subtitle {
+    color: var(--text-muted);
+    font-weight: 400;
+    margin-top: 0.25rem;
+    font-size: 1rem;
 }
 
 .glass-header h1 {
-    font-size: 2.2rem; /* Reduced from 3rem */
+    font-size: 3rem;
     font-weight: 700;
     background: linear-gradient(135deg, var(--primary-accent), var(--secondary-accent));
     -webkit-background-clip: text;
     background-clip: text; /* Fix lint warning */
     -webkit-text-fill-color: transparent;
     letter-spacing: -0.05em;
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.5rem;
 }
 
 .glass-header p {
@@ -67,62 +77,25 @@ body {
     font-size: 1.1rem;
 }
 
-/* Main Layout */
+/* Main Layout - Unified Mobile Style */
 .main-content {
-    display: grid;
-    grid-template-columns: 1fr 350px; /* Sidebar width fixed */
-    gap: var(--spacing-lg);
+    display: block; 
     flex: 1;
-    overflow: hidden; /* Prevent body scroll, handle inside main */
+    /* overflow: hidden; Removed to allow page scroll */
 }
 
 /* Menu Grid Section */
 .menu-grid-section {
-    overflow-y: auto;
-    padding-right: 1rem;
-    scrollbar-width: thin;
-    scrollbar-color: var(--glass-border) transparent;
+    /* overflow-y: auto; Removed internal scroll */
+    padding-right: 0; 
+    padding-bottom: 120px; /* More space for footer */
 }
 
-.section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: var(--spacing-md);
-}
+/* ... Section Headers ... */
 
-.section-header h2 {
-    font-size: 1.5rem;
-    font-weight: 600;
-}
-
-.badge {
-    background: rgba(56, 189, 248, 0.1);
-    color: var(--primary-accent);
-    padding: 0.25rem;
-    border-radius: 20px;
-    font-weight: 600;
-    font-size: 0.9rem;
-    border: 1px solid rgba(56, 189, 248, 0.2);
-    transition: all 0.3s ease;
-}
-
-.badge.limit-reached {
-    background: rgba(248, 113, 113, 0.1);
-    color: #f87171;
-    border-color: rgba(248, 113, 113, 0.2);
-}
-
-.menu-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 1.5rem;
-}
-
-/* Menu Card */
 .menu-card {
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
+    background: rgba(240, 249, 255, 0.7); /* Blue tint matching results */
+    border: 1px solid rgba(14, 165, 233, 0.3);
     border-radius: var(--radius-md);
     overflow: hidden;
     cursor: pointer;
@@ -131,20 +104,43 @@ body {
     position: relative;
     display: flex;
     flex-direction: column;
-    min-height: 80px; /* Reduced height since no image */
+    min-height: 80px; 
     justify-content: center;
 }
 
 .menu-card:hover {
     transform: translateY(-4px);
-    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
-    border-color: rgba(56, 189, 248, 0.3);
+    box-shadow: 0 10px 30px -10px rgba(14, 165, 233, 0.2);
+    border-color: rgba(56, 189, 248, 0.6);
 }
 
 .menu-card.selected {
     border-color: var(--primary-accent);
     box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.3);
-    background: rgba(56, 189, 248, 0.1); /* Highlight selected card bg */
+    background: rgba(14, 165, 233, 0.15); 
+}
+
+/* Dessert Card Variant */
+.menu-card.dessert-card {
+    background: rgba(255, 240, 245, 0.8); /* Pinkish tint */
+    border-color: rgba(244, 114, 182, 0.3);
+}
+
+.menu-card.dessert-card:hover {
+    border-color: rgba(244, 114, 182, 0.6);
+    box-shadow: 0 10px 30px -10px rgba(244, 114, 182, 0.3);
+}
+
+.menu-card.dessert-card.selected {
+    border-color: #ec4899; /* Pink-500 */
+    box-shadow: 0 0 0 2px rgba(236, 72, 153, 0.3);
+    background: rgba(236, 72, 153, 0.1);
+}
+
+.menu-card.dessert-card.selected .check-icon {
+    background: #ec4899;
+    border-color: #ec4899;
+    color: white;
 }
 
 .card-content {
@@ -157,8 +153,8 @@ body {
 }
 
 .menu-name {
-    font-weight: 600; /* Bolder text */
-    font-size: 1.1rem; /* Slightly larger text */
+    font-weight: 600; 
+    font-size: 1.1rem; 
     line-height: 1.4;
 }
 
@@ -180,31 +176,49 @@ body {
     color: #0f172a;
 }
 
-/* Sidebar */
+/* Sidebar - Unified Overlay Style */
 .top-picks-sidebar {
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
-    border-radius: var(--radius-lg);
-    padding: var(--spacing-md);
-    backdrop-filter: blur(10px);
-    height: fit-content;
-    max-height: 100%;
-    overflow-y: auto;
-    position: sticky;
-    top: var(--spacing-md);
+    display: none; /* Hidden by default */
 }
 
-.top-picks-sidebar h2 {
-    font-size: 1.25rem;
+/* When visible, shows as overlay */
+.top-picks-sidebar.mobile-visible {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 200;
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    padding: var(--spacing-md);
+}
+
+.top-picks-sidebar.mobile-visible h2 {
+    font-size: 1.5rem;
     margin-bottom: 1rem;
     padding-bottom: 1rem;
     border-bottom: 1px solid var(--glass-border);
+}
+
+.close-sidebar-btn {
+    display: block;
+    align-self: flex-end;
+    font-size: 1.5rem;
+    background: none;
+    border: none;
+    color: var(--text-color);
+    margin-bottom: 1rem;
+    cursor: pointer;
 }
 
 .top-picks-list {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
+    margin-bottom: 2rem;
 }
 
 .pick-item {
@@ -273,15 +287,88 @@ body {
     padding: 2rem 0;
 }
 
-/* Mobile Sticky Footer */
+/* Toast Notification */
+.toast-container {
+    position: fixed;
+    top: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    pointer-events: none;
+    width: auto;
+}
+
+.toast {
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(16px);
+    color: #1e293b;
+    padding: 12px 24px;
+    border-radius: 99px; /* Pill shape */
+    font-size: 0.95rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 
+        0 4px 6px -1px rgba(0, 0, 0, 0.1), 
+        0 10px 15px -3px rgba(0, 0, 0, 0.1),
+        0 0 0 1px rgba(0,0,0,0.05); /* Subtle border ring */
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+    animation: toastEnter 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    pointer-events: auto;
+    min-width: 280px;
+    justify-content: center;
+}
+
+.toast.toast-error {
+    background: #fff0f0;
+    color: #e11d48;
+    border-color: rgba(225, 29, 72, 0.1);
+}
+
+.toast.toast-error::before {
+    content: "⚠️";
+    font-size: 1.1rem;
+}
+
+.toast.toast-success {
+    background: #f0fdf4;
+    color: #15803d;
+    border-color: rgba(21, 128, 61, 0.1);
+}
+
+.toast.toast-success::before {
+    content: "✅";
+    font-size: 1.1rem;
+}
+
+@keyframes toastEnter {
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes toastOut {
+    to {
+        opacity: 0;
+        transform: translateY(-10px) scale(0.95);
+    }
+}
+
+/* Sticky Footer - Always Visible */
 .mobile-picks-indicator {
-    display: none; /* Hidden on desktop */
+    display: flex; 
     position: fixed;
     bottom: 20px;
     left: 50%;
     transform: translateX(-50%);
-    transform: translateX(-50%);
-    background: var(--glass-bg); /* Use variable for theme switching */
+    background: var(--glass-bg);
     border: 1px solid var(--glass-border);
     padding: 0.75rem 1.5rem;
     border-radius: 30px;
@@ -298,7 +385,7 @@ body {
 /* Mobile Action Buttons */
 .mobile-actions {
     display: flex;
-    gap: 0.5rem; /* Reduced from 0.75rem */
+    gap: 0.5rem; 
 }
 
 .icon-btn {
@@ -446,15 +533,29 @@ body {
     overflow-y: auto;
 }
 
+/* Result Items */
 .result-item {
     display: flex;
     justify-content: space-between;
     padding: 0.75rem;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-md); /* Added radius for colored items */
+    margin-bottom: 4px; /* Gap for separate items */
+}
+
+.result-item.main-result {
+    background: rgba(240, 249, 255, 0.6);
+    border: 1px solid rgba(14, 165, 233, 0.2);
+}
+
+.result-item.dessert-result {
+    background: rgba(255, 240, 245, 0.6);
+    border: 1px solid rgba(244, 114, 182, 0.2);
 }
 
 .result-item:last-child {
-    border-bottom: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05); /* Restore border for consistency or remove margin */
+    margin-bottom: 0;
 }
 
 .result-count {
@@ -462,59 +563,16 @@ body {
     color: var(--primary-accent);
 }
 
-/* Responsive */
+.result-item.dessert-result .result-count {
+    color: #db2777; /* Pink-600 */
+}
+
+/* Clean up Responsive Media Query */
 @media (max-width: 900px) {
     .app-container {
         height: auto;
         overflow: visible;
-        padding-bottom: 80px; /* Space for mobile footer */
+        padding-bottom: 80px; 
     }
-
-    .glass-header h1 {
-        font-size: 2.2rem;
-    }
-
-    .main-content {
-        display: block;
-    }
-    
-    .top-picks-sidebar {
-        display: none; /* Hide sidebar on mobile, use sheet or modal in future */
-    }
-    
-    .top-picks-sidebar.mobile-visible {
-        display: flex;
-        flex-direction: column;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: 200;
-        border-radius: 0;
-        border: none;
-    }
-
-    .top-picks-sidebar.mobile-visible .close-sidebar-btn {
-        display: block;
-        align-self: flex-end;
-        font-size: 1.5rem;
-        background: none;
-        border: none;
-        color: var(--text-color);
-        margin-bottom: 1rem;
-    }
-    
-    .menu-grid-section {
-        padding-right: 0;
-    }
-
-    /* Show mobile footer */
-    .mobile-picks-indicator {
-        display: flex;
-    }
-}
-
-.close-sidebar-btn {
-    display: none; /* Hidden on desktop */
+    /* Most styles are now global */
 }

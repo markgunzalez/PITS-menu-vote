@@ -35,6 +35,14 @@ const menuItems = [
     { id: 31, name: "หลนหมูเจ่าพร้อมผักเคียง" },
 ];
 
+const dessertItems = [
+    { id: 'd1', name: "ผลไม้ตามฤดูกาล"},
+    { id: 'd2', name: "สาคูแคนตาลูป"},
+    { id: 'd3', name: "เฉาก๊วยโบราณ"},
+    { id: 'd4', name: "ทับทิมกรอบ"},
+    { id: 'd5', name: "ลอดช่องน้ำกะทิ (ลอดช่องวัดเจษ)"},
+];
+
 let selectedItems = [];
 
 // DOM Elements
@@ -90,10 +98,41 @@ async function fetchTotalVoters() {
 function renderMenuGrid() {
     menuGrid.innerHTML = '';
     
-    menuItems.forEach(item => {
+    // 1. Render Main Courses
+    const mainHeader = document.createElement('h3');
+    mainHeader.className = 'menu-category-header';
+    mainHeader.textContent = 'อาหารคาว (เลือก 8 อย่าง)';
+    menuGrid.appendChild(mainHeader);
+
+    const mainGrid = document.createElement('div');
+    mainGrid.className = 'menu-sub-grid';
+    renderItemsToGrid(menuItems, mainGrid);
+    menuGrid.appendChild(mainGrid);
+
+    // 2. Render Desserts
+    const dessertHeader = document.createElement('h3');
+    dessertHeader.className = 'menu-category-header';
+    dessertHeader.textContent = 'อาหารหวาน (เลือก 1 อย่าง)';
+    dessertHeader.style.marginTop = '2rem';
+    menuGrid.appendChild(dessertHeader);
+
+    const dessertGrid = document.createElement('div');
+    dessertGrid.className = 'menu-sub-grid';
+    renderItemsToGrid(dessertItems, dessertGrid, true); // true = isDessert
+    menuGrid.appendChild(dessertGrid);
+}
+
+function renderItemsToGrid(items, container, isDessert = false) {
+    container.style.display = 'grid';
+    container.style.gridTemplateColumns = 'repeat(auto-fill, minmax(220px, 1fr))';
+    container.style.gap = '16px';
+
+    items.forEach(item => {
         const isSelected = selectedItems.some(selected => selected.id === item.id);
+        const cardClass = isDessert ? 'menu-card dessert-card' : 'menu-card';
+        
         const card = document.createElement('div');
-        card.className = `menu-card ${isSelected ? 'selected' : ''}`;
+        card.className = `${cardClass} ${isSelected ? 'selected' : ''}`;
         card.onclick = () => toggleSelection(item);
         
         card.innerHTML = `
@@ -105,28 +144,38 @@ function renderMenuGrid() {
             </div>
         `;
         
-        menuGrid.appendChild(card);
+        container.appendChild(card);
     });
 }
 
 // Handle clicking a menu item
 function toggleSelection(item) {
+    const isDessert = dessertItems.some(d => d.id === item.id);
     const index = selectedItems.findIndex(i => i.id === item.id);
     
     if (index !== -1) {
         // Remove if already selected
         selectedItems.splice(index, 1);
     } else {
-        // Add if not selected, checking limit
-        if (selectedItems.length >= MAX_SELECTION) {
-            alert(`เลือกเมนูได้สูงสุด ${MAX_SELECTION} รายการ!`);
-            return;
+        // Check Limits
+        const currentMain = selectedItems.filter(i => !dessertItems.some(d => d.id === i.id)).length;
+        const currentDessert = selectedItems.filter(i => dessertItems.some(d => d.id === i.id)).length;
+
+        if (isDessert) {
+            if (currentDessert >= 1) {
+                showToast('เลือกของหวานได้เพียง 1 อย่าง!', 'error');
+                return;
+            }
+        } else {
+            if (currentMain >= MAX_SELECTION) {
+                showToast(`เลือกอาหารคาวได้สูงสุด ${MAX_SELECTION} รายการ!`, 'error');
+                return;
+            }
         }
         selectedItems.push(item);
     }
     
     // Refresh View
-    // Optimize: Could just update specific DOM elements, but re-render is safe for this size
     renderMenuGrid(); 
     renderTopPicks();
     updateUI();
@@ -141,13 +190,22 @@ function renderTopPicks() {
         return;
     }
 
-    selectedItems.forEach((item, index) => {
+    // Sort: Main first, Dessert last
+    const sortedSelection = [...selectedItems].sort((a, b) => {
+        const aIsDessert = dessertItems.some(d => d.id === a.id);
+        const bIsDessert = dessertItems.some(d => d.id === b.id);
+        if (aIsDessert === bIsDessert) return 0;
+        return aIsDessert ? 1 : -1; 
+    });
+
+    sortedSelection.forEach((item, index) => {
+        const isDessert = dessertItems.some(d => d.id === item.id);
         const row = document.createElement('div');
         row.className = 'pick-item';
         row.innerHTML = `
-            <div class="pick-rank">#${index + 1}</div>
-            <span class="pick-name">${item.name}</span>
-            <button class="remove-btn" onclick="removeItem(${item.id})">×</button>
+            <div class="pick-rank" style="${isDessert ? 'background:#ec4899;' : ''}">${index + 1}</div>
+            <span class="pick-name">${item.name} <small style="color:var(--text-muted)">${isDessert ? '(หวาน)' : ''}</small></span>
+            <button class="remove-btn" onclick="removeItem('${item.id}')">×</button>
         `;
         topPicksList.appendChild(row);
     });
@@ -155,22 +213,27 @@ function renderTopPicks() {
 
 function removeItem(id) {
     // Helper to remove from sidebar directly
-    const item = menuItems.find(i => i.id === id);
+    let item = menuItems.find(i => i.id == id); // Loose equality
+    if (!item) item = dessertItems.find(i => i.id == id);
+    
     if (item) toggleSelection(item);
 }
 
 // Update counters and badges
 function updateUI() {
-    const countText = `${selectedItems.length}`;
-    selectionCount.textContent = countText + ' เมนู';
-    mobileCount.textContent = countText;
+    const mainCount = selectedItems.filter(i => !dessertItems.some(d => d.id === i.id)).length;
+    const dessertCount = selectedItems.filter(i => dessertItems.some(d => d.id === i.id)).length;
+
+    const countText = `คาว ${mainCount}/${MAX_SELECTION} | หวาน ${dessertCount}/1`;
+    selectionCount.textContent = countText;
+    mobileCount.textContent = `${mainCount}+${dessertCount}`;
     
     // Toggle Submit Button visibility
     const hasItems = selectedItems.length > 0;
     submitBtn.classList.toggle('hidden', !hasItems);
     mobileSubmitBtn.classList.toggle('hidden', !hasItems);
 
-    if (selectedItems.length === MAX_SELECTION) {
+    if (mainCount === MAX_SELECTION && dessertCount === 1) {
         selectionCount.classList.add('limit-reached');
     } else {
         selectionCount.classList.remove('limit-reached');
@@ -211,12 +274,12 @@ async function submitVote() {
     }
 
     if (success) {
-        alert('ส่งผลโหวตแล้ว');
+        showToast('ส่งผลโหวตเรียบร้อยแล้ว!', 'success');
         finishSubmission(backendResults);
     } else {
         // Fallback: Save to LocalStorage
         saveToLocalStorage(selectedIds);
-        alert('ส่งผลโหวตแล้ว (บันทึกในเครื่อง)');
+        showToast('ส่งผลโหวตแล้ว (บันทึกในเครื่อง)', 'success');
         finishSubmission(getLocalStorageVotes());
     }
 }
@@ -284,32 +347,50 @@ async function showResults(resultsData) {
     }
 
     // Sort menus by vote count DESC
-    const sortedMenus = [...menuItems].map(item => ({
+    const sortedMain = [...menuItems].map(item => ({
+        ...item,
+        votes: votes[item.id] || 0
+    })).sort((a, b) => b.votes - a.votes);
+
+    const sortedDessert = [...dessertItems].map(item => ({
         ...item,
         votes: votes[item.id] || 0
     })).sort((a, b) => b.votes - a.votes);
 
     resultsList.innerHTML = '';
-    
-    // Sort logic to show top items
-    const hasVotes = sortedMenus.some(i => i.votes > 0);
-    
-    if (!hasVotes) {
-        resultsList.innerHTML = '<p style="text-align:center; color:var(--text-muted)">ยังไม่มีผลโหวต</p>';
-        return;
-    }
 
-    sortedMenus.forEach((item, index) => {
-        // Show all items, do not filter zero votes
+    // Helper to render a section
+    const renderSection = (title, items, isDessert = false) => {
+        const header = document.createElement('h3');
+        header.style.marginTop = '1.5rem';
+        header.style.marginBottom = '0.5rem';
+        header.style.color = isDessert ? '#ec4899' : 'var(--primary-accent)'; // Pink if dessert
+        header.textContent = title;
+        resultsList.appendChild(header);
 
-        const div = document.createElement('div');
-        div.className = 'result-item';
-        div.innerHTML = `
-            <span>${index + 1}. ${item.name}</span>
-            <span class="result-count">${item.votes} คะแนน</span>
-        `;
-        resultsList.appendChild(div);
-    });
+        if (items.every(i => i.votes === 0)) {
+            const p = document.createElement('p');
+            p.textContent = 'ยังไม่มีผลโหวต';
+            p.style.color = 'var(--text-muted)';
+            p.style.fontSize = '0.9rem';
+            resultsList.appendChild(p);
+            return;
+        }
+
+        items.forEach((item, index) => {
+            const div = document.createElement('div');
+            div.className = isDessert ? 'result-item dessert-result' : 'result-item main-result';
+            div.innerHTML = `
+                <span>${index + 1}. ${item.name}</span>
+                <span class="result-count">${item.votes} คะแนน</span>
+            `;
+            resultsList.appendChild(div);
+        });
+    };
+    
+    // Render Sections
+    renderSection('อาหารคาว', sortedMain);
+    renderSection('อาหารหวาน', sortedDessert, true); // true = isDessert
 }
 
 function closeResults() {
@@ -324,18 +405,46 @@ async function resetVotes() {
     try {
         const response = await fetch('/api/reset', { method: 'POST' });
         if (response.ok) {
-            alert('ลบคะแนนทั้งหมดเรียบร้อยแล้ว');
+            showToast('ลบคะแนนทั้งหมดเรียบร้อยแล้ว', 'success');
             location.reload();
         } else {
-            alert('เกิดข้อผิดพลาดในการรีเซ็ตคะแนน');
+            showToast('เกิดข้อผิดพลาดในการรีเซ็ตคะแนน', 'error');
         }
     } catch (e) {
         console.error(e);
         // Fallback demo reset
         localStorage.removeItem('menu_votes_demo');
-        alert('ลบคะแนน (Local Demo) เรียบร้อยแล้ว');
+        showToast('ลบคะแนน (Local Demo) เรียบร้อยแล้ว', 'success');
         location.reload();
     }
+}
+
+// Toast Notification Helper
+function showToast(message, type = 'info') {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+
+    // Clear existing toasts (Show only one)
+    container.innerHTML = '';
+
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.textContent = message;
+
+    container.appendChild(toast);
+
+    // Auto remove after 3 seconds
+    setTimeout(() => {
+        // Check if this specific toast is still in DOM (it might have been cleared by a new one)
+        if (container.contains(toast)) {
+            toast.style.animation = 'toastOut 0.3s forwards';
+            toast.addEventListener('animationend', () => {
+                if (container.contains(toast)) {
+                    container.removeChild(toast);
+                }
+            });
+        }
+    }, 3000);
 }
 
 // Mobile Sidebar Toggle

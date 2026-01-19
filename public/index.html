@@ -18,17 +18,20 @@
             <h1>PITS Annual Party 2026</h1>
             <h3>6 กุมภาพันธ์ 2026 @ครัวกรุงเทพ</h3>
             <br>
-            <p>เลือกเมนูที่อยากทานที่สุด 8 อย่าง</p>
+            <p>เลือกเมนูที่อยากทานที่สุด 8 เมนู ของหวาน 1 อย่าง</p>
             <!-- <p id="total-voters" class="voter-count">ผู้ร่วมโหวตแล้ว: <span id="voter-count-number">...</span> คน</p> -->
         </header>
 
         <main class="main-content">
             <section class="menu-grid-section">
                 <div class="section-header">
-                    <h2>รายการเมนู</h2>
-                    <h4>**เมนูแนะนำ</h4>
+                    <div>
+                        <h2>เมนูอาหาร</h2>
+                        <h4 class="section-subtitle">**เมนูแนะนำ</h4>
+                    </div>
                     <span id="selection-count" class="badge">0 / 8 เมนู</span>
                 </div>
+                <br>
                 <div id="menu-grid" class="menu-grid">
                     <!-- Menu items will be injected here via JS -->
                 </div>
@@ -70,6 +73,7 @@
                 </div>
             </div>
         </div>
+        <div id="toast-container" class="toast-container"></div>
     </div>
 
     <script src="script.js"></script>
