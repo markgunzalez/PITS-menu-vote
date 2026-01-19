@@ -125,6 +125,11 @@ const Data = {
 
 // --- APIs ---
 
+// Explicit Root Route (Fallback if static serving fails)
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
 app.post('/api/reset', async (req, res) => {
     try {
         await Data.resetVotes();
