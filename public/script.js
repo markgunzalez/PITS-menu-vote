@@ -53,6 +53,37 @@ const resultsList = document.getElementById('results-list');
 function init() {
     renderMenuGrid();
     updateUI();
+    fetchTotalVoters();
+}
+
+async function fetchTotalVoters() {
+    try {
+        const response = await fetch('/api/results?t=' + Date.now());
+        if (response.ok) {
+            const data = await response.json();
+            console.log('Fetched Results:', data); // Debug
+            
+            // Handle both structure formats
+            let count = 0;
+            if (data.totalVoters !== undefined) {
+                count = data.totalVoters;
+            } else if (data.votes) {
+                // If nested but missing totalVoters
+                 count = 0;
+            }
+            
+            const el = document.getElementById('voter-count-number');
+            if (el) {
+                el.textContent = count;
+            } else {
+                console.error('Element #voter-count-number not found!');
+            }
+        }
+    } catch (e) {
+        console.warn('Failed to fetch voter count', e);
+        const el = document.getElementById('voter-count-number');
+        if (el) el.textContent = '-';
+    }
 }
 
 // Render the grid of available menus
@@ -106,7 +137,7 @@ function renderTopPicks() {
     topPicksList.innerHTML = '';
     
     if (selectedItems.length === 0) {
-        topPicksList.innerHTML = '<p class="empty-state">No items selected yet.</p>';
+        topPicksList.innerHTML = '<p class="empty-state">ยังไม่ได้เลือกรายการ</p>';
         return;
     }
 
@@ -130,8 +161,8 @@ function removeItem(id) {
 
 // Update counters and badges
 function updateUI() {
-    const countText = `${selectedItems.length} / ${MAX_SELECTION}`;
-    selectionCount.textContent = countText + ' Selected';
+    const countText = `${selectedItems.length}`;
+    selectionCount.textContent = countText + ' เมนู';
     mobileCount.textContent = countText;
     
     // Toggle Submit Button visibility
@@ -151,7 +182,13 @@ function updateUI() {
 async function submitVote() {
     if (selectedItems.length === 0) return;
 
+    if (!confirm('ยืนยันการส่งผลโหวตใช่หรือไม่?')) {
+        return;
+    }
+
     const selectedIds = selectedItems.map(item => item.id);
+    let success = false;
+    let backendResults = null;
 
     try {
         const response = await fetch('/api/vote', {
@@ -163,17 +200,23 @@ async function submitVote() {
         if (response.ok) {
             const result = await response.json();
             if (result.success) {
-                alert('Vote Submitted! (Saved to Server)');
-                finishSubmission(result.results);
-                return;
+                success = true;
+                backendResults = result.results;
             }
+        } else {
+            throw new Error('Server response not ok');
         }
-        throw new Error('Server response not ok');
     } catch (error) {
         console.warn('Backend unavailable, using LocalStorage fallback.', error);
+    }
+
+    if (success) {
+        alert('ส่งผลโหวตแล้ว');
+        finishSubmission(backendResults);
+    } else {
         // Fallback: Save to LocalStorage
         saveToLocalStorage(selectedIds);
-        alert('Vote Submitted! (Saved Locally - Demo Mode)');
+        alert('ส่งผลโหวตแล้ว (บันทึกในเครื่อง)');
         finishSubmission(getLocalStorageVotes());
     }
 }
@@ -183,6 +226,15 @@ function finishSubmission(results) {
     renderMenuGrid();
     renderTopPicks();
     updateUI();
+    
+    // Update main page voter count immediately 
+    if (results && results.totalVoters !== undefined) {
+        const countEl = document.getElementById('voter-count-number');
+        if (countEl) countEl.textContent = results.totalVoters;
+    } else {
+        fetchTotalVoters();
+    }
+
     showResults(results);
 }
 
@@ -200,20 +252,34 @@ function getLocalStorageVotes() {
 }
 
 async function showResults(resultsData) {
-    resultsList.innerHTML = '<p>Loading...</p>';
+    resultsList.innerHTML = '<p>กำลังโหลด...</p>';
     resultsModal.classList.remove('hidden');
 
-    let votes = resultsData;
+    let votesData = resultsData;
 
     // Fetch if not provided
-    if (!votes) {
+    if (!votesData) {
         try {
             const response = await fetch('/api/results');
             if (!response.ok) throw new Error('Network response was not ok');
-            votes = await response.json();
+            votesData = await response.json();
         } catch (e) {
             console.warn('Using LocalStorage results fallback', e);
-            votes = getLocalStorageVotes();
+            votesData = { votes: getLocalStorageVotes() };
+        }
+    }
+
+    // Handle legacy format (just object) vs new format ({ votes, totalVoters })
+    let votes = votesData.votes || votesData; 
+    let totalVoters = votesData.totalVoters || 0;
+
+    // Update Header with Total Voters
+    const headerTitle = resultsModal.querySelector('.modal-header h2');
+    if (headerTitle) {
+        if (totalVoters > 0) {
+            headerTitle.textContent = `ผลโหวต (ผู้ร่วมโหวต ${totalVoters} คน)`;
+        } else {
+            headerTitle.textContent = `ผลโหวต`;
         }
     }
 
@@ -229,7 +295,7 @@ async function showResults(resultsData) {
     const hasVotes = sortedMenus.some(i => i.votes > 0);
     
     if (!hasVotes) {
-        resultsList.innerHTML = '<p style="text-align:center; color:var(--text-muted)">No votes yet.</p>';
+        resultsList.innerHTML = '<p style="text-align:center; color:var(--text-muted)">ยังไม่มีผลโหวต</p>';
         return;
     }
 
@@ -240,7 +306,7 @@ async function showResults(resultsData) {
         div.className = 'result-item';
         div.innerHTML = `
             <span>${index + 1}. ${item.name}</span>
-            <span class="result-count">${item.votes} Votes</span>
+            <span class="result-count">${item.votes} คะแนน</span>
         `;
         resultsList.appendChild(div);
     });
@@ -251,23 +317,23 @@ function closeResults() {
 }
 
 async function resetVotes() {
-    if (!confirm('⚠️ Are you sure you want to delete ALL votes? This cannot be undone.')) {
+    if (!confirm('⚠️ คุณแน่ใจหรือไม่ว่าต้องการลบคะแนนทั้งหมด? การกระทำนี้ไม่สามารถย้อนกลับได้')) {
         return;
     }
     
     try {
         const response = await fetch('/api/reset', { method: 'POST' });
         if (response.ok) {
-            alert('All votes have been cleared.');
+            alert('ลบคะแนนทั้งหมดเรียบร้อยแล้ว');
             location.reload();
         } else {
-            alert('Failed to reset votes.');
+            alert('เกิดข้อผิดพลาดในการรีเซ็ตคะแนน');
         }
     } catch (e) {
         console.error(e);
         // Fallback demo reset
         localStorage.removeItem('menu_votes_demo');
-        alert('Local demo votes cleared.');
+        alert('ลบคะแนน (Local Demo) เรียบร้อยแล้ว');
         location.reload();
     }
 }

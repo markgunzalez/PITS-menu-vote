@@ -1,118 +1,88 @@
+require('dotenv').config(); // Load environment variables locally
 const express = require('express');
-const cors = require('cors');
-const bodyParser = require('body-parser');
 const path = require('path');
-const { kv } = require('@vercel/kv'); // Vercel KV SDK
-
+const { kv, createClient } = require('@vercel/kv'); // Vercel KV SDK
 const app = express();
 const PORT = process.env.PORT || 3000;
-const DB_PATH = path.join(__dirname, 'data', 'votes.db');
 
 // Check Environment
-const USE_KV = !!process.env.KV_REST_API_URL;
+const USE_KV = !!process.env.PITS_REDIS_KV_REST_API_URL;
 const IS_VERCEL = !!process.env.VERCEL;
 
+// Function to get KV client with custom env vars
+const getKvClient = () => {
+    if (USE_KV) {
+        return createClient({
+            url: process.env.PITS_REDIS_KV_REST_API_URL,
+            token: process.env.PITS_REDIS_KV_REST_API_TOKEN,
+        });
+    }
+    return kv;
+}
+
+const kvClient = getKvClient();
+
+// Middleware
+app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public'))); 
 
 // --- Database adapters ---
 
-// 1. SQLite Adapter (Defensive Loading)
-let db;
-let useMemoryFallback = false;
+// --- Database adapters ---
 
-try {
-    // If using KV or strictly on Vercel, skip SQLite to avoid native binding errors
-    if (USE_KV || process.env.VERCEL) {
-        throw new Error('Cloud/Serverless Environment detected. Skipping SQLite.');
-    }
-
-    const fs = require('fs');
-    const sqlite3 = require('sqlite3').verbose();
-    const dataDir = path.dirname(DB_PATH);
-    if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir);
-    
-    db = new sqlite3.Database(DB_PATH, (err) => {
-        if (err) {
-            console.error('SQLite Init Failed:', err.message);
-            useMemoryFallback = true;
-        } else {
-            console.log('Connected to Local SQLite.');
-            db.run(`CREATE TABLE IF NOT EXISTS menu_votes (id INTEGER PRIMARY KEY, count INTEGER DEFAULT 0)`);
-        }
-    });
-} catch (e) {
-    console.log('Using In-Memory Fallback (Reason:', e.message, ')');
-    useMemoryFallback = true;
-}
-
-// 2. In-Memory Fallback
+// 2. In-Memory Fallback (Primary fallback if verified KV fails)
 const memoryStore = {};
+let memoryTotalVoters = 0;
 
 // Data Helpers
 const Data = {
     async getVotes() {
         if (USE_KV) {
             // Redis (Cloud)
-            return (await kv.hgetall('menu_votes')) || {};
-        } else if (useMemoryFallback) {
-            // In-Memory
-            return memoryStore;
+            const raw = (await kvClient.hgetall('menu_votes')) || {};
+            const total = (await kvClient.get('total_voters')) || 0;
+            
+            // Redis often returns strings, cast to numbers for consistency
+            const results = {};
+            for (const [key, value] of Object.entries(raw)) {
+                results[key] = parseInt(value, 10);
+            }
+            return { votes: results, totalVoters: parseInt(total, 10) };
         } else {
-            // SQLite (Local)
-            return new Promise((resolve, reject) => {
-                db.all("SELECT id, count FROM menu_votes", [], (err, rows) => {
-                    if (err) reject(err);
-                    else {
-                        const results = {};
-                        rows.forEach(row => results[row.id] = row.count);
-                        resolve(results);
-                    }
-                });
-            });
+            // In-Memory Fallback
+            return { votes: memoryStore, totalVoters: memoryTotalVoters };
         }
     },
 
     async addVotes(selectedIds) {
         if (USE_KV) {
             // Redis (Cloud)
-            const pipeline = kv.pipeline();
+            const pipeline = kvClient.pipeline();
             selectedIds.forEach(id => {
                 pipeline.hincrby('menu_votes', id, 1);
             });
+            pipeline.incr('total_voters');
             await pipeline.exec();
             return this.getVotes();
-        } else if (useMemoryFallback) {
-            // In-Memory
+        } else {
+            // In-Memory Fallback
             selectedIds.forEach(id => {
                 memoryStore[id] = (memoryStore[id] || 0) + 1;
             });
-            return memoryStore;
-        } else {
-            // SQLite (Local)
-            return new Promise((resolve, reject) => {
-                db.serialize(() => {
-                    const stmt = db.prepare("INSERT INTO menu_votes (id, count) VALUES (?, 1) ON CONFLICT(id) DO UPDATE SET count = count + 1");
-                    selectedIds.forEach(id => stmt.run(id));
-                    stmt.finalize(() => {
-                        this.getVotes().then(resolve).catch(reject);
-                    });
-                });
-            });
+            memoryTotalVoters++;
+            return { votes: memoryStore, totalVoters: memoryTotalVoters };
         }
     },
 
     async resetVotes() {
         if (USE_KV) {
-            await kv.del('menu_votes');
-        } else if (useMemoryFallback) {
-            for (const key in memoryStore) delete memoryStore[key];
+            // Redis (Cloud)
+            await kvClient.del('menu_votes');
+            await kvClient.set('total_voters', 0);
         } else {
-            return new Promise((resolve, reject) => {
-                db.run("DELETE FROM menu_votes", [], (err) => {
-                    if (err) reject(err);
-                    else resolve();
-                });
-            });
+            // In-Memory Fallback
+            for (const key in memoryStore) delete memoryStore[key];
+            memoryTotalVoters = 0;
         }
         return {};
     }
@@ -167,9 +137,8 @@ app.get('/api/results', async (req, res) => {
 if (require.main === module) {
     app.listen(PORT, () => {
         console.log(`Server running at http://localhost:${PORT}`);
-        let mode = '🗄️ Local (SQLite)';
+        let mode = '🗄️ In-Memory (Fallback)';
         if (USE_KV) mode = '⚡ Vercel KV (Redis)';
-        else if (useMemoryFallback) mode = '⚠️ In-Memory (Fallback)';
         console.log(`Storage Mode: ${mode}`);
     });
 }

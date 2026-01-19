@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,6 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
     <div class="app-container">
         <header class="glass-header">
@@ -17,6 +19,7 @@
             <h3>6 กุมภาพันธ์ 2026 @ครัวกรุงเทพ</h3>
             <br>
             <p>เลือกเมนูที่อยากทานที่สุด 8 อย่าง</p>
+            <!-- <p id="total-voters" class="voter-count">ผู้ร่วมโหวตแล้ว: <span id="voter-count-number">...</span> คน</p> -->
         </header>
 
         <main class="main-content">
@@ -35,24 +38,23 @@
                 <button class="close-sidebar-btn" onclick="toggleSidebar()">×</button>
                 <h2>เมนูที่คุณเลือก</h2>
                 <div id="top-picks-list" class="top-picks-list">
-                    <p class="empty-state">No items selected yet.</p>
+                    <p class="empty-state">ยังไม่ได้เลือกรายการ</p>
                 </div>
                 <!-- Submit Vote Button -->
-                <button id="submit-vote-btn" class="submit-btn hidden" onclick="submitVote()">Submit Vote</button>
-                <button id="show-results-btn" class="secondary-btn" onclick="showResults()">View Results</button>
-                
-                <!-- Admin Tools -->
-                <!-- <button id="reset-btn" class="text-btn danger" onclick="resetVotes()">Reset All Votes</button> -->
+                <button id="submit-vote-btn" class="submit-btn hidden" onclick="submitVote()">โหวต</button>
+                <button id="show-results-btn" class="secondary-btn" onclick="showResults()">ดูผลโหวต</button>
+
             </aside>
         </main>
-        
+
         <!-- Mobile Sticky Footer for Top Picks Preview -->
         <div class="mobile-picks-indicator glass-panel">
-            <span>เมนูที่คุณเลือก</span>
-            <span id="mobile-count" class="badge">0/8</span>
+            <span>เมนูที่เลือก</span>
+            <span id="mobile-count" class="badge">0</span>
             <div class="mobile-actions">
+                <button id="mobile-results-btn" class="icon-btn" onclick="showResults()">ผลโหวต</button>
                 <button id="view-picks-btn" class="icon-btn">ดูเมนูที่เลือก</button>
-                <button id="mobile-submit-btn" class="icon-btn highlight hidden" onclick="submitVote()">ส่งผลลัพธ์</button>
+                <!-- <button id="mobile-submit-btn" class="icon-btn highlight hidden" onclick="submitVote()">โหวต</button> -->
             </div>
         </div>
 
@@ -60,7 +62,7 @@
         <div id="results-modal" class="modal hidden">
             <div class="modal-content glass-panel">
                 <div class="modal-header">
-                    <h2>ผลลัพธ์การโหวต</h2>
+                    <h2>ผลโหวต</h2>
                     <button class="close-btn" onclick="closeResults()">×</button>
                 </div>
                 <div id="results-list" class="results-list">
@@ -72,4 +74,5 @@
 
     <script src="script.js"></script>
 </body>
+
 </html>
