@@ -1,9 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
-const fs = require('fs');
 const { kv } = require('@vercel/kv'); // Vercel KV SDK
 
 const app = express();
@@ -12,6 +10,7 @@ const DB_PATH = path.join(__dirname, 'data', 'votes.db');
 
 // Check Environment
 const USE_KV = !!process.env.KV_REST_API_URL;
+const IS_VERCEL = !!process.env.VERCEL;
 
 // Middleware
 app.use(cors());
@@ -20,30 +19,25 @@ app.use(express.static(path.join(__dirname)));
 
 // --- Database adapters ---
 
-// 1. SQLite Adapter (Local/Fallback)
+// 1. SQLite Adapter (Lazy Load for Local Only)
 let db;
-if (!USE_KV) {
-    // If running on Vercel but no KV link, use In-Memory to avoid crash
-    // Otherwise use file-based SQLite
-    const isVercel = !!process.env.VERCEL;
+if (!USE_KV && !IS_VERCEL) {
+    const fs = require('fs');
+    const sqlite3 = require('sqlite3').verbose();
+    const dataDir = path.dirname(DB_PATH);
+    if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir);
     
-    if (isVercel) {
-        console.warn("⚠️ VERCEL DETECTED BUT NO KV CONFIG. Falling back to IN-MEMORY database (Data will be lost on restart).");
-        db = new sqlite3.Database(':memory:');
-        db.run(`CREATE TABLE IF NOT EXISTS menu_votes (id INTEGER PRIMARY KEY, count INTEGER DEFAULT 0)`);
-    } else {
-        const dataDir = path.dirname(DB_PATH);
-        if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir);
-        
-        db = new sqlite3.Database(DB_PATH, (err) => {
-            if (err) console.error('SQLite Error:', err.message);
-            else {
-                console.log('Connected to Local SQLite.');
-                db.run(`CREATE TABLE IF NOT EXISTS menu_votes (id INTEGER PRIMARY KEY, count INTEGER DEFAULT 0)`);
-            }
-        });
-    }
+    db = new sqlite3.Database(DB_PATH, (err) => {
+        if (err) console.error('SQLite Error:', err.message);
+        else {
+            console.log('Connected to Local SQLite.');
+            db.run(`CREATE TABLE IF NOT EXISTS menu_votes (id INTEGER PRIMARY KEY, count INTEGER DEFAULT 0)`);
+        }
+    });
 }
+
+// 2. In-Memory Fallback (For Vercel without KV)
+const memoryStore = {};
 
 // Data Helpers
 const Data = {
@@ -51,6 +45,10 @@ const Data = {
         if (USE_KV) {
             // Redis (Cloud)
             return (await kv.hgetall('menu_votes')) || {};
+        } else if (IS_VERCEL) {
+            // In-Memory (Fallback)
+            // Note: Data resets on server restart
+            return memoryStore;
         } else {
             // SQLite (Local)
             return new Promise((resolve, reject) => {
@@ -68,13 +66,19 @@ const Data = {
 
     async addVotes(selectedIds) {
         if (USE_KV) {
-            // Redis (Cloud) - Increment each key
+            // Redis (Cloud)
             const pipeline = kv.pipeline();
             selectedIds.forEach(id => {
                 pipeline.hincrby('menu_votes', id, 1);
             });
             await pipeline.exec();
             return this.getVotes();
+        } else if (IS_VERCEL) {
+            // In-Memory (Fallback)
+            selectedIds.forEach(id => {
+                memoryStore[id] = (memoryStore[id] || 0) + 1;
+            });
+            return memoryStore;
         } else {
             // SQLite (Local)
             return new Promise((resolve, reject) => {
@@ -122,7 +126,10 @@ app.get('/api/results', async (req, res) => {
 if (require.main === module) {
     app.listen(PORT, () => {
         console.log(`Server running at http://localhost:${PORT}`);
-        console.log(`Storage Mode: ${USE_KV ? '⚡ Vercel KV (Redis)' : '🗄️ Local (SQLite)'}`);
+        let mode = '🗄️ Local (SQLite)';
+        if (USE_KV) mode = '⚡ Vercel KV (Redis)';
+        else if (IS_VERCEL) mode = '⚠️ In-Memory (Fallback)';
+        console.log(`Storage Mode: ${mode}`);
     });
 }
 
