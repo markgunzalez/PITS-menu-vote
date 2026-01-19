@@ -93,22 +93,7 @@ const Data = {
         }
     },
 
-    async resetVotes() {
-        if (USE_KV) {
-            await kv.del('menu_votes');
-        } else if (IS_VERCEL) {
-            for (const key in memoryStore) delete memoryStore[key];
-        } else {
-            return new Promise((resolve, reject) => {
-                db.run("DELETE FROM menu_votes", [], (err) => {
-                    if (err) reject(err);
-                    else resolve();
-                });
-            });
-        }
-        return {};
-    }
-};
+
 
 // --- APIs ---
 
@@ -154,7 +139,7 @@ if (require.main === module) {
         console.log(`Server running at http://localhost:${PORT}`);
         let mode = '🗄️ Local (SQLite)';
         if (USE_KV) mode = '⚡ Vercel KV (Redis)';
-        else if (IS_VERCEL) mode = '⚠️ In-Memory (Fallback)';
+        else if (useMemoryFallback) mode = '⚠️ In-Memory (Fallback)';
         console.log(`Storage Mode: ${mode}`);
     });
 }
