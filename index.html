@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Top 8 Menu Vote</title>
+    <meta name="description" content="Vote for your top 8 favorite menus.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="glass-header">
+            <h1>PITS Annual Party 2026</h1>
+            <h3>6 กุมภาพันธ์ 2026 @ครัวกรุงเทพ</h3>
+            <br>
+            <p>เลือกเมนูที่อยากทานที่สุด 8 อย่าง</p>
+        </header>
+
+        <main class="main-content">
+            <section class="menu-grid-section">
+                <div class="section-header">
+                    <h2>Menu Collection</h2>
+                    <h6>**เมนูแนะนำ</h6>
+                    <span id="selection-count" class="badge">0 / 8 Selected</span>
+                </div>
+                <div id="menu-grid" class="menu-grid">
+                    <!-- Menu items will be injected here via JS -->
+                </div>
+            </section>
+
+            <aside id="sidebar" class="top-picks-sidebar glass-panel">
+                <button class="close-sidebar-btn" onclick="toggleSidebar()">×</button>
+                <h2>Your Top 8</h2>
+                <div id="top-picks-list" class="top-picks-list">
+                    <p class="empty-state">No items selected yet.</p>
+                </div>
+                <!-- Submit Vote Button -->
+                <button id="submit-vote-btn" class="submit-btn hidden" onclick="submitVote()">Submit Vote</button>
+                <button id="show-results-btn" class="secondary-btn" onclick="showResults()">View Results</button>
+            </aside>
+        </main>
+        
+        <!-- Mobile Sticky Footer for Top Picks Preview -->
+        <div class="mobile-picks-indicator glass-panel">
+            <span>Your Picks</span>
+            <span id="mobile-count" class="badge">0/8</span>
+            <div class="mobile-actions">
+                <button id="view-picks-btn" class="icon-btn">View</button>
+                <button id="mobile-submit-btn" class="icon-btn highlight hidden" onclick="submitVote()">Submit</button>
+            </div>
+        </div>
+
+        <!-- Results Modal -->
+        <div id="results-modal" class="modal hidden">
+            <div class="modal-content glass-panel">
+                <div class="modal-header">
+                    <h2>Global Voting Results</h2>
+                    <button class="close-btn" onclick="closeResults()">×</button>
+                </div>
+                <div id="results-list" class="results-list">
+                    <!-- Results injected here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

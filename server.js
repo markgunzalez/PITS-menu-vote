@@ -1,0 +1,114 @@
+const express = require('express');
+const cors = require('cors');
+const bodyParser = require('body-parser');
+const sqlite3 = require('sqlite3').verbose();
+const path = require('path');
+const fs = require('fs');
+const { kv } = require('@vercel/kv'); // Vercel KV SDK
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+const DB_PATH = path.join(__dirname, 'data', 'votes.db');
+
+// Check Environment
+const USE_KV = !!process.env.KV_REST_API_URL;
+
+// Middleware
+app.use(cors());
+app.use(bodyParser.json());
+app.use(express.static(path.join(__dirname))); 
+
+// --- Database adapters ---
+
+// 1. SQLite Adapter (Local)
+let db;
+if (!USE_KV) {
+    const dataDir = path.dirname(DB_PATH);
+    if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir);
+    
+    db = new sqlite3.Database(DB_PATH, (err) => {
+        if (err) console.error('SQLite Error:', err.message);
+        else {
+            console.log('Connected to Local SQLite.');
+            db.run(`CREATE TABLE IF NOT EXISTS menu_votes (id INTEGER PRIMARY KEY, count INTEGER DEFAULT 0)`);
+        }
+    });
+}
+
+// Data Helpers
+const Data = {
+    async getVotes() {
+        if (USE_KV) {
+            // Redis (Cloud)
+            return (await kv.hgetall('menu_votes')) || {};
+        } else {
+            // SQLite (Local)
+            return new Promise((resolve, reject) => {
+                db.all("SELECT id, count FROM menu_votes", [], (err, rows) => {
+                    if (err) reject(err);
+                    else {
+                        const results = {};
+                        rows.forEach(row => results[row.id] = row.count);
+                        resolve(results);
+                    }
+                });
+            });
+        }
+    },
+
+    async addVotes(selectedIds) {
+        if (USE_KV) {
+            // Redis (Cloud) - Increment each key
+            const pipeline = kv.pipeline();
+            selectedIds.forEach(id => {
+                pipeline.hincrby('menu_votes', id, 1);
+            });
+            await pipeline.exec();
+            return this.getVotes();
+        } else {
+            // SQLite (Local)
+            return new Promise((resolve, reject) => {
+                db.serialize(() => {
+                    const stmt = db.prepare("INSERT INTO menu_votes (id, count) VALUES (?, 1) ON CONFLICT(id) DO UPDATE SET count = count + 1");
+                    selectedIds.forEach(id => stmt.run(id));
+                    stmt.finalize(() => {
+                        this.getVotes().then(resolve).catch(reject);
+                    });
+                });
+            });
+        }
+    }
+};
+
+// --- APIs ---
+
+app.post('/api/vote', async (req, res) => {
+    const { selectedIds } = req.body;
+    if (!Array.isArray(selectedIds) || selectedIds.length === 0) {
+        return res.status(400).json({ error: 'Invalid selection' });
+    }
+
+    try {
+        const results = await Data.addVotes(selectedIds);
+        res.json({ success: true, message: 'Votes recorded', results });
+    } catch (err) {
+        console.error("Save Error:", err);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+app.get('/api/results', async (req, res) => {
+    try {
+        const results = await Data.getVotes();
+        res.json(results);
+    } catch (err) {
+        console.error("Read Error:", err);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+// Start Server
+app.listen(PORT, () => {
+    console.log(`Server running at http://localhost:${PORT}`);
+    console.log(`Storage Mode: ${USE_KV ? '⚡ Vercel KV (Redis)' : '🗄️ Local (SQLite)'}`);
+});
