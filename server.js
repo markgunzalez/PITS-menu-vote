@@ -12,13 +12,7 @@ const DB_PATH = path.join(__dirname, 'data', 'votes.db');
 const USE_KV = !!process.env.KV_REST_API_URL;
 const IS_VERCEL = !!process.env.VERCEL;
 
-// Middleware
-app.use(cors());
-app.use(bodyParser.json());
-// Serve static files from multiple potential roots to ensure Vercel finds them
-app.use(express.static(path.join(__dirname))); 
-app.use(express.static(process.cwd()));
-app.use(express.static('.')); 
+app.use(express.static(path.join(__dirname, 'public'))); 
 
 // --- Database adapters ---
 
@@ -128,9 +122,9 @@ const Data = {
 
 // --- APIs ---
 
-// Explicit Root Route (Fallback if static serving fails)
+// Explicit Root Route (Fallback if static serving fails locally)
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 app.post('/api/reset', async (req, res) => {
