@@ -15,7 +15,10 @@ const IS_VERCEL = !!process.env.VERCEL;
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
+// Serve static files from multiple potential roots to ensure Vercel finds them
 app.use(express.static(path.join(__dirname))); 
+app.use(express.static(process.cwd()));
+app.use(express.static('.')); 
 
 // --- Database adapters ---
 
