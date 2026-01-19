@@ -250,6 +250,28 @@ function closeResults() {
     resultsModal.classList.add('hidden');
 }
 
+async function resetVotes() {
+    if (!confirm('⚠️ Are you sure you want to delete ALL votes? This cannot be undone.')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/reset', { method: 'POST' });
+        if (response.ok) {
+            alert('All votes have been cleared.');
+            location.reload();
+        } else {
+            alert('Failed to reset votes.');
+        }
+    } catch (e) {
+        console.error(e);
+        // Fallback demo reset
+        localStorage.removeItem('menu_votes_demo');
+        alert('Local demo votes cleared.');
+        location.reload();
+    }
+}
+
 // Mobile Sidebar Toggle
 function toggleSidebar() {
     sidebar.classList.toggle('mobile-visible');

@@ -91,10 +91,36 @@ const Data = {
                 });
             });
         }
+    },
+
+    async resetVotes() {
+        if (USE_KV) {
+            await kv.del('menu_votes');
+        } else if (IS_VERCEL) {
+            for (const key in memoryStore) delete memoryStore[key];
+        } else {
+            return new Promise((resolve, reject) => {
+                db.run("DELETE FROM menu_votes", [], (err) => {
+                    if (err) reject(err);
+                    else resolve();
+                });
+            });
+        }
+        return {};
     }
 };
 
 // --- APIs ---
+
+app.post('/api/reset', async (req, res) => {
+    try {
+        await Data.resetVotes();
+        res.json({ success: true, message: 'All votes have been reset.' });
+    } catch (err) {
+        console.error("Reset Error:", err);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
 
 app.post('/api/vote', async (req, res) => {
     const { selectedIds } = req.body;
