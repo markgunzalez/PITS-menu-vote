@@ -118,7 +118,13 @@ app.get('/api/results', async (req, res) => {
 });
 
 // Start Server
-app.listen(PORT, () => {
-    console.log(`Server running at http://localhost:${PORT}`);
-    console.log(`Storage Mode: ${USE_KV ? '⚡ Vercel KV (Redis)' : '🗄️ Local (SQLite)'}`);
-});
+// Only start listening if running directly (not required/handled by Vercel in serverless mode usually, but harmless if guarded)
+if (require.main === module) {
+    app.listen(PORT, () => {
+        console.log(`Server running at http://localhost:${PORT}`);
+        console.log(`Storage Mode: ${USE_KV ? '⚡ Vercel KV (Redis)' : '🗄️ Local (SQLite)'}`);
+    });
+}
+
+// Export for Vercel Serverless
+module.exports = app;
