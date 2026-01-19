@@ -19,24 +19,36 @@ app.use(express.static(path.join(__dirname)));
 
 // --- Database adapters ---
 
-// 1. SQLite Adapter (Lazy Load for Local Only)
+// 1. SQLite Adapter (Defensive Loading)
 let db;
-if (!USE_KV && !IS_VERCEL) {
+let useMemoryFallback = false;
+
+try {
+    // If using KV or strictly on Vercel, skip SQLite to avoid native binding errors
+    if (USE_KV || process.env.VERCEL) {
+        throw new Error('Cloud/Serverless Environment detected. Skipping SQLite.');
+    }
+
     const fs = require('fs');
     const sqlite3 = require('sqlite3').verbose();
     const dataDir = path.dirname(DB_PATH);
     if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir);
     
     db = new sqlite3.Database(DB_PATH, (err) => {
-        if (err) console.error('SQLite Error:', err.message);
-        else {
+        if (err) {
+            console.error('SQLite Init Failed:', err.message);
+            useMemoryFallback = true;
+        } else {
             console.log('Connected to Local SQLite.');
             db.run(`CREATE TABLE IF NOT EXISTS menu_votes (id INTEGER PRIMARY KEY, count INTEGER DEFAULT 0)`);
         }
     });
+} catch (e) {
+    console.log('Using In-Memory Fallback (Reason:', e.message, ')');
+    useMemoryFallback = true;
 }
 
-// 2. In-Memory Fallback (For Vercel without KV)
+// 2. In-Memory Fallback
 const memoryStore = {};
 
 // Data Helpers
@@ -45,9 +57,8 @@ const Data = {
         if (USE_KV) {
             // Redis (Cloud)
             return (await kv.hgetall('menu_votes')) || {};
-        } else if (IS_VERCEL) {
-            // In-Memory (Fallback)
-            // Note: Data resets on server restart
+        } else if (useMemoryFallback) {
+            // In-Memory
             return memoryStore;
         } else {
             // SQLite (Local)
@@ -73,8 +84,8 @@ const Data = {
             });
             await pipeline.exec();
             return this.getVotes();
-        } else if (IS_VERCEL) {
-            // In-Memory (Fallback)
+        } else if (useMemoryFallback) {
+            // In-Memory
             selectedIds.forEach(id => {
                 memoryStore[id] = (memoryStore[id] || 0) + 1;
             });
@@ -92,6 +103,23 @@ const Data = {
             });
         }
     },
+
+    async resetVotes() {
+        if (USE_KV) {
+            await kv.del('menu_votes');
+        } else if (useMemoryFallback) {
+            for (const key in memoryStore) delete memoryStore[key];
+        } else {
+            return new Promise((resolve, reject) => {
+                db.run("DELETE FROM menu_votes", [], (err) => {
+                    if (err) reject(err);
+                    else resolve();
+                });
+            });
+        }
+        return {};
+    }
+};
 
 
 
