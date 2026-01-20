@@ -19,6 +19,7 @@
             <h3>6 กุมภาพันธ์ 2026 @ครัวกรุงเทพ</h3>
             <br>
             <p>เลือกเมนูที่อยากทานที่สุด 8 เมนู ของหวาน 1 อย่าง</p>
+            <button id="mobile-results-btn" class="icon-btn" onclick="showResults()">ดูผลโหวต</button>
             <!-- <p id="total-voters" class="voter-count">ผู้ร่วมโหวตแล้ว: <span id="voter-count-number">...</span> คน</p> -->
         </header>
 
@@ -45,7 +46,7 @@
                 </div>
                 <!-- Submit Vote Button -->
                 <button id="submit-vote-btn" class="submit-btn hidden" onclick="submitVote()">โหวต</button>
-                <button id="show-results-btn" class="secondary-btn" onclick="showResults()">ดูผลโหวต</button>
+                <!-- <button id="show-results-btn" class="secondary-btn" onclick="showResults()">ดูผลโหวต</button> -->
 
             </aside>
         </main>
@@ -55,8 +56,8 @@
             <span>เมนูที่เลือก</span>
             <span id="mobile-count" class="badge">0</span>
             <div class="mobile-actions">
-                <button id="mobile-results-btn" class="icon-btn" onclick="showResults()">ผลโหวต</button>
-                <button id="view-picks-btn" class="icon-btn">ดูเมนูที่เลือก</button>
+                <!-- <button id="mobile-results-btn" class="icon-btn" onclick="showResults()">ผลโหวต</button> -->
+                <button id="view-picks-btn" class="icon-btn">ส่งผลโหวต</button>
                 <!-- <button id="mobile-submit-btn" class="icon-btn highlight hidden" onclick="submitVote()">โหวต</button> -->
             </div>
         </div>

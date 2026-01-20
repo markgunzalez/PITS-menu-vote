@@ -414,7 +414,7 @@ async function showResults(resultsData) {
                 hiddenContainer.classList.toggle('show');
                 
                 if (hiddenContainer.classList.contains('show')) {
-                    toggleBtn.textContent = 'ซ่อนผลโหวต';
+                    toggleBtn.textContent = 'ซ่อนรายการอื่นๆ';
                 } else {
                     toggleBtn.textContent = `ดูผลโหวตทั้งหมด (${hiddenItems.length} รายการ)`;
                 }
