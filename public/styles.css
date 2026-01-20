@@ -219,6 +219,10 @@ body {
     flex-direction: column;
     gap: 0.75rem;
     margin-bottom: 2rem;
+    flex: 1; /* Take up available space */
+    overflow-y: auto; /* Scroll if content overflows */
+    min-height: 0; /* Prevent flex overflow issues */
+    padding-bottom: 1rem; /* Space for scrolling */
 }
 
 .pick-item {
@@ -528,6 +532,31 @@ body {
     line-height: 1;
 }
 
+.modal-nav {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-bottom: 1px solid var(--glass-border);
+    background: rgba(255,255,255,0.02);
+}
+
+.nav-btn {
+    flex: 1;
+    padding: 0.5rem;
+    border-radius: 99px;
+    border: 1px solid var(--glass-border);
+    background: transparent;
+    color: var(--text-color);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.nav-btn:hover {
+    background: rgba(0,0,0,0.05);
+    border-color: var(--text-muted);
+}
+
 .results-list {
     padding: 1.5rem;
     overflow-y: auto;
@@ -558,6 +587,18 @@ body {
     margin-bottom: 0;
 }
 
+.result-item.top-rank {
+    background: rgba(254, 243, 199, 0.8); /* Amber-100 */
+    border: 2px solid #f59e0b; /* Amber-500 */
+    position: relative;
+    box-shadow: 0 4px 6px -1px rgba(245, 158, 11, 0.2);
+}
+
+.result-item.top-rank .result-count {
+    color: #b45309; /* Amber-700 */
+    font-weight: 800;
+}
+
 .result-count {
     font-weight: 700;
     color: var(--primary-accent);
@@ -575,4 +616,59 @@ body {
         padding-bottom: 80px; 
     }
     /* Most styles are now global */
+}
+
+/* Jump Button in Results */
+.jump-btn {
+    display: block;
+    margin: 0 auto 1rem auto;
+    padding: 0.5rem 1.25rem;
+    background: rgba(236, 72, 153, 0.1);
+    color: #db2777;
+    border: 1px solid rgba(236, 72, 153, 0.3);
+    border-radius: 99px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.jump-btn:hover {
+    background: rgba(236, 72, 153, 0.2);
+    transform: translateY(-1px);
+}
+
+.hidden-results {
+    display: none;
+}
+
+.hidden-results.show {
+    display: block;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.toggle-results-btn {
+    display: block;
+    width: 100%;
+    text-align: center;
+    padding: 0.75rem;
+    margin-top: 0.5rem;
+    background: transparent;
+    border: 1px dashed var(--glass-border);
+    color: var(--text-muted);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+}
+
+.toggle-results-btn:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-color);
+    border-color: var(--text-muted);
 }

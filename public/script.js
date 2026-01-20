@@ -362,6 +362,13 @@ async function showResults(resultsData) {
     // Helper to render a section
     const renderSection = (title, items, isDessert = false) => {
         const header = document.createElement('h3');
+        // Add IDs for scrolling
+        if (isDessert) {
+            header.id = 'dessert-results-header';
+        } else {
+            header.id = 'main-results-header';
+        }
+        
         header.style.marginTop = '1.5rem';
         header.style.marginBottom = '0.5rem';
         header.style.color = isDessert ? '#ec4899' : 'var(--primary-accent)'; // Pink if dessert
@@ -377,17 +384,65 @@ async function showResults(resultsData) {
             return;
         }
 
-        items.forEach((item, index) => {
-            const div = document.createElement('div');
-            div.className = isDessert ? 'result-item dessert-result' : 'result-item main-result';
-            div.innerHTML = `
-                <span>${index + 1}. ${item.name}</span>
-                <span class="result-count">${item.votes} คะแนน</span>
-            `;
-            resultsList.appendChild(div);
+        // Split items: Top Rank vs Rest
+        const limit = isDessert ? 1 : 8;
+        const visibleItems = items.slice(0, limit);
+        const hiddenItems = items.slice(limit);
+
+        // Render Visible Items
+        visibleItems.forEach((item, index) => {
+            renderItem(item, index, isDessert, true); // true = always show
         });
+
+        // Render Hidden Items (if any)
+        if (hiddenItems.length > 0) {
+            const hiddenContainer = document.createElement('div');
+            hiddenContainer.className = 'hidden-results';
+            
+            hiddenItems.forEach((item, index) => {
+                renderItem(item, index + limit, isDessert, false, hiddenContainer); 
+            });
+            resultsList.appendChild(hiddenContainer);
+
+            // Toggle Button
+            const toggleBtn = document.createElement('button');
+            toggleBtn.className = 'toggle-results-btn';
+            toggleBtn.textContent = `ดูผลโหวตทั้งหมด (${hiddenItems.length} รายการ)`;
+            toggleBtn.onclick = () => {
+                const isHidden = hiddenContainer.style.display === 'none' || !hiddenContainer.style.display; // Check inline or class
+                // Toggle Class logic is better
+                hiddenContainer.classList.toggle('show');
+                
+                if (hiddenContainer.classList.contains('show')) {
+                    toggleBtn.textContent = 'ซ่อนผลโหวต';
+                } else {
+                    toggleBtn.textContent = `ดูผลโหวตทั้งหมด (${hiddenItems.length} รายการ)`;
+                }
+            };
+            resultsList.appendChild(toggleBtn);
+        }
     };
     
+    const renderItem = (item, index, isDessert, isTopRankForce, container = resultsList) => {
+        const div = document.createElement('div');
+        
+        // Highlight Logic: Top 8 for Main, Top 1 for Dessert
+        const limit = isDessert ? 1 : 8;
+        const isTopRank = index < limit && item.votes > 0; // Double check logic if passing index directly
+
+        let className = isDessert ? 'result-item dessert-result' : 'result-item main-result';
+        if (isTopRank) {
+            className += ' top-rank';
+        }
+
+        div.className = className;
+        div.innerHTML = `
+            <span>${index + 1}. ${item.name} ${isTopRank ? '🏆' : ''}</span>
+            <span class="result-count">${item.votes} คะแนน</span>
+        `;
+        container.appendChild(div);
+    };
+
     // Render Sections
     renderSection('อาหารคาว', sortedMain);
     renderSection('อาหารหวาน', sortedDessert, true); // true = isDessert
@@ -455,6 +510,17 @@ function toggleSidebar() {
 // Event Listeners
 if (viewPicksBtn) {
     viewPicksBtn.onclick = toggleSidebar;
+}
+
+// Navigation Helpers
+window.scrollToMain = function() {
+    const el = document.getElementById('main-results-header');
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+window.scrollToDessert = function() {
+    const el = document.getElementById('dessert-results-header');
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 // Start
