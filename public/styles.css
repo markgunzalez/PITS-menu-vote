@@ -429,7 +429,7 @@ body {
     padding: 0.75rem;
     border-radius: var(--radius-md);
     background: linear-gradient(135deg, var(--primary-accent), var(--secondary-accent));
-    color: #0f172a;
+    color: white;
     font-weight: 700;
     border: none;
     cursor: pointer;
@@ -615,7 +615,192 @@ body {
         overflow: visible;
         padding-bottom: 80px; 
     }
-    /* Most styles are now global */
+}
+
+/* Shared Components */
+.glass-panel {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.form-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--glass-border);
+    background: rgba(255, 255, 255, 0.8);
+    font-family: var(--font-main);
+    font-size: 1rem;
+    color: var(--text-color);
+    transition: all 0.2s ease;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--primary-accent);
+    box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15);
+    background: white;
+}
+
+.btn-group {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+
+/* Wheel Page Styles */
+.wheel-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 500px;
+    margin: 2rem auto;
+    aspect-ratio: 1;
+}
+
+#wheel {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+#pointer {
+    position: absolute;
+    top: 50%;
+    right: -20px;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border-top: 15px solid transparent;
+    border-bottom: 15px solid transparent;
+    border-right: 35px solid #FFD700;
+    z-index: 10;
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.2));
+    display: none;
+}
+
+.wheel-main-layout {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 2rem;
+    align-items: center;
+    margin-top: 2rem;
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.spin-controls {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+}
+
+@media (max-width: 768px) {
+    .wheel-main-layout {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+}
+
+.controls-panel {
+    max-width: 500px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.name-list-display {
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    text-align: center;
+    min-height: 1.5rem;
+    word-break: break-all;
+}
+
+.name-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.5rem;
+    text-align: left;
+    margin-top: 0.5rem;
+}
+
+.name-item {
+    padding: 0.25rem 0.5rem;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 4px;
+    font-size: 0.85rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.name-item span {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.remove-name-btn {
+    background: none;
+    border: none;
+    color: #ef4444;
+    cursor: pointer;
+    font-weight: bold;
+    padding: 0 0.25rem;
+    line-height: 1;
+    font-size: 1rem;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+}
+
+.remove-name-btn:hover {
+    opacity: 1;
+}
+
+.result-display {
+    font-size: 2rem;
+    font-weight: 500;
+    text-align: center;
+    min-height: 3rem;
+    margin-top: 1rem;
+    background: none;
+    /*color: white;  Revert to white/default */
+    /* text-shadow: 0 2px 4px rgba(0,0,0,0.5); */
+}
+
+.winner-name {
+    margin-top: 1rem;
+    color: var(--primary-accent);
+    font-weight: 800;
+    font-size: 4rem;
+    /* text-shadow: 0 0 10px rgba(166, 147, 38, 0.5); */
+}
+
+
+
+
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+    .wheel-wrapper {
+        width: 90%;
+    }
+
+    #pointer {
+        right: -10px;
+        border-right-width: 25px;
+    }
 }
 
 /* Jump Button in Results */

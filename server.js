@@ -1,6 +1,7 @@
 require('dotenv').config(); // Load environment variables locally
 const express = require('express');
 const path = require('path');
+const fs = require('fs');
 const { kv, createClient } = require('@vercel/kv'); // Vercel KV SDK
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -97,6 +98,10 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+app.get('/wheel', (req,res) => {
+    res.sendFile(path.join(__dirname, 'public', 'wheel.html'));
+})
+
 app.post('/api/reset', async (req, res) => {
     try {
         await Data.resetVotes();
@@ -131,6 +136,30 @@ app.get('/api/results', async (req, res) => {
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
+
+app.get('/api/names', (req, res) => {
+    try {
+        const filePath = path.join(__dirname, 'data', 'name.txt');
+        if (!fs.existsSync(filePath)) {
+            return res.json([]); // Return empty array if file doesn't exist
+        }
+        
+        fs.readFile(filePath, 'utf8', (err, data) => {
+            if (err) {
+                console.error("File Read Error:", err);
+                return res.status(500).json({ error: 'Internal Server Error' });
+            }
+            // Split by newline and filter empty lines
+            const names = data.split(/\r?\n/).map(name => name.trim()).filter(name => name.length > 0);
+            res.json(names);
+        });
+    } catch (err) {
+        console.error("API Error:", err);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+
 
 // Start Server
 // Only start listening if running directly (not required/handled by Vercel in serverless mode usually, but harmless if guarded)

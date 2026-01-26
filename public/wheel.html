@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fortune Wheel - PITS Annual Party</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+
+</head>
+
+<body>
+    <div class="app-container">
+        <header class="glass-header">
+            <h1>PITS Fortune Wheel</h1>
+            <p>หมุนๆ ลุ้นของขวัญ!</p>
+        </header>
+
+        <main class="main-content">
+            <div class="controls-panel glass-panel">
+                <div class="input-group" style="display: flex; gap: 0.5rem;">
+                    <input type="text" id="input-name" placeholder="Enter a name" class="form-input">
+                    <button onclick="addName()" class="icon-btn highlight"
+                        style="border-radius: var(--radius-md);">Add</button>
+                    <!-- <button onclick="addName()" class="submit-btn" style="width: auto; margin: 0;">Add</button> -->
+                </div>
+
+                <div id="name-list" class="name-list-display">No names added yet.</div>
+
+                <div class="btn-group" style="justify-content: center;">
+                    <button onclick="createWheel()" class="submit-btn" style="margin-top: 0;">Create Wheel</button>
+                    <button id="reset-btn" onclick="resetList()" class="secondary-btn"
+                        style="margin-top: 0;">Reset</button>
+                </div>
+            </div>
+
+            <!-- New Container for 2-Column Layout -->
+            <div class="wheel-main-layout" style="display: none;">
+                <div class="wheel-wrapper">
+                    <div id="pointer"></div>
+                    <canvas id="wheel" width="1500" height="1500"></canvas>
+                </div>
+
+                <div class="spin-controls">
+                    <button id="start-btn" onclick="spinWheel()" class="submit-btn"
+                        style="max-width: 200px; font-size: 1.2rem; padding: 1rem; color: white;"
+                        disabled>หมุนเลย!</button>
+                    <div id="result" class="result-display"></div>
+
+                </div>
+            </div>
+
+            <div style="text-align: center;">
+                <button onclick="window.location.href='index.html'" class="secondary-btn" style="max-width: 150px;">Back
+                    to Menu</button>
+            </div>
+        </main>
+    </div>
+
+    <script src="wheel.js"></script>
+</body>
+
+</html>
